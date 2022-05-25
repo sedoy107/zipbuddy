@@ -204,6 +204,9 @@ class ZipInfo:
         RECORD_MAX_SIZE = RECORD_MIN_SIZE + MAX_COMMENT_SIZE
         commentLen = 0
 
+        if (self.size < RECORD_MIN_SIZE):
+            raise ZipFormatError(f"The size of the file is too small")
+
         while(True):
             cdrOfft = self.size - (RECORD_MIN_SIZE + commentLen)
             self.fd.seek(cdrOfft, 0)
