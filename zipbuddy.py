@@ -202,15 +202,24 @@ class ZipInfo:
         MAX_COMMENT_SIZE = 0xffff # 65535
         RECORD_MIN_SIZE = 22
         RECORD_MAX_SIZE = RECORD_MIN_SIZE + MAX_COMMENT_SIZE
-        
-        cdrOfft = self.size - RECORD_MIN_SIZE
-        self.fd.seek(cdrOfft, 0)
-        readPos = self.fd.tell()
-        buf = self.fd.read(RECORD_MIN_SIZE)
-        self.cdr = CentralDirRecord(buf)
-        if (not self.cdr.isGood()):
-            eprint("Comment may be present. Extended parsing required")
-            raise ZipFormatError(f"Central Directory Record magic value mismatch at offset: {readPos}")
+        commentLen = 0
+
+        while(True):
+            cdrOfft = self.size - (RECORD_MIN_SIZE + commentLen)
+            self.fd.seek(cdrOfft, 0)
+            readPos = self.fd.tell()
+            buf = self.fd.read(RECORD_MIN_SIZE)
+            self.cdr = CentralDirRecord(buf)
+
+            if (self.cdr.isGood()):
+                break
+
+            commentLen += 1
+
+            if (commentLen == MAX_COMMENT_SIZE or cdrOfft == 0):
+                raise ZipFormatError(f"Central Directory Record magic value not found")
+
+
        
         
         
